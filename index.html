@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Hello World</title>
+	<script src="http://localhost:3000/socket/socket.io.js"></script>
+	<style type="text/css">
+		body {
+			margin: 0px;
+			padding: 0px;
+			background-color: black;
+			color: white;
+		}
+
+		.heading {
+			text-align: center;
+			font-family: sans-serif;
+		}
+
+		#contentDiv {
+			justify-content: center;
+			margin: auto;
+			border: 1px solid white;
+			display: block;
+			width: 40%;
+			height: 500px !important;
+			overflow: auto;
+		}
+
+		#contentDiv p {
+			background-color: darkred;
+			font-family: sans-serif;
+		}
+
+		#message-bar {
+			text-align: center;
+			position: absolute;
+			width: 100%;
+		}
+
+		#message-bar input {
+			width: 39.8%;
+			padding: 10px;
+			border-radius: 30px;
+		}
+	</style>
+</head>
+<body>
+	<h1 class="heading">Chat what else?</h1>
+	<div id="contentDiv"></div>
+
+	<div id="message-bar">
+		<input type="text" id="message" placeholder="Write your message">
+	</div>
+
+	<script>
+		const socket = io("http://localhost:3000", {
+			path: "/socket"
+		});
+
+		const name = prompt("Kindly write your name");
+		socket.emit("user-identification", {name});
+
+		socket.once("welcome", data => {
+			console.info(`Socket: ${data.message} (ID: ${data.sessionId})`);
+		});
+
+		socket.on("user-join", (data) => {
+			console.log(data)
+		});
+
+		socket.on("user-new-message", (data) => {
+			displayMessage(data.name, data.content);
+		});
+
+		// Send a message
+		function sendMessage () {
+			const input = document.getElementById("message");
+			const content = input.value;
+			if (content.length > 0) {
+				socket.emit("user-new-message", { content });
+				displayMessage(name, content);
+
+				input.value = "";
+			};
+		};
+
+		// Display the message
+		function displayMessage (name, content) {
+			const para = document.createElement("p");
+			para.appendChild(document.createTextNode(`${name}: ${content}`));
+
+			const div = document.getElementById("contentDiv");
+			if (div) {
+				div.appendChild(para);
+			};
+		};
+
+		document.addEventListener("keyup", (event) => {
+			if (event.keyCode === 13) {
+				sendMessage();
+			};
+		});
+
+	</script>
+</body>
+</html>
